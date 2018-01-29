@@ -4,6 +4,9 @@ from typing import Callable
 
 
 class BinaryWorld:
+
+    """World of 2D-genes composed of binary number."""
+
     def __init__(self, selector: Callable[[np.ndarray], int], genesize_x: int =5, genesize_y: int =5, worldsize: int =100):
         self.selector = selector
         self.genesize_x = genesize_x
@@ -14,6 +17,7 @@ class BinaryWorld:
             self.world[i] = gene.Gene(np.random.randint(0, 2, (genesize_y, genesize_x)))
 
     def crossbreed(self, gene1: gene.Gene, gene2: gene.Gene) -> (gene.Gene, gene.Gene):
+        """Crossbreed given two genes and generate new two genes."""
         subgenesize_x = np.random.randint(0, self.genesize_x + 1)
         subgenesize_y = np.random.randint(0, self.genesize_y + 1)
         takepoint_x = np.random.randint(0, self.genesize_x)
@@ -29,10 +33,12 @@ class BinaryWorld:
         return (child1, child2)
 
     def get_genes(self) -> [gene.Gene]:
+        """Return list of all genes in the world."""
         return self.world
 
     def mutation(self, mutate_gene: gene.Gene):
-        mutation_size = int(np.random.exponential(1))
+        """Insert random small gene into given gene."""
+        mutation_size = int(np.random.exponential(0.5))
         if mutation_size == 0:
             return
         mutation_gene = gene.Gene(np.random.randint(0, 2, (mutation_size, mutation_size)))
@@ -41,12 +47,18 @@ class BinaryWorld:
         mutate_gene.insert_subgene(mutation_gene, mutatepoint_x, mutatepoint_y)
 
     def selection(self):
-        score = np.array([(self.selector)(g) for g in self.world])
+        """Rank genes, select parents and reproduct the new generation."""
+        map(self.mutation, self.world)
+        score = ([(self.selector)(g) for g in self.world])
+        score = np.array(score)
         score /= score.sum()
         probability_density = np.zeros(self.worldsize)
         probability_density[0] = score[0]
         for i in range(1, len(score)):
             probability_density[i] = probability_density[i - 1] + score[i]
+        self._reproduce(probability_density)
+
+    def _reproduce(self, probability_density: np.ndarray):
         new_generation = [0 for i in range(self.worldsize)]
         for i in range(self.worldsize // 2):
             parent1 = self.world[np.where(probability_density > np.random.rand())[0][0]]
