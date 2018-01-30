@@ -12,6 +12,7 @@ def selector(gene: gene.Gene) -> int:
         point += np.sum((np.dot(sample, gene_plane) - sample) ** 2)
     return 1 / (point / 10 + 1)
 
+
 if __name__ == '__main__':
     world = g.BinaryWorld(selector, genesize_x=7, genesize_y=7, worldsize=1000)
     for i in range(1000):
